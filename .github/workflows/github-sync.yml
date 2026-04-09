@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  top-repos:
+  my-github-sync:
     if: true  # <-- Remove this line to activate the workflow
     runs-on: ubuntu-latest
     env:
