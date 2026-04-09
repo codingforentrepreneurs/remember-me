@@ -19,7 +19,7 @@ cd "$PARENT"
 
 ### Data Config
 ```bash
-export GHOST_NAME="delacruz"
+export GHOST_NAME="remember-me"
 export RAW_DIR="raw/github"
 export TMP_DIR="/tmp/delacruz-github"
 
@@ -226,11 +226,12 @@ head "$TRENDING_CSV"
 
 ```bash
 export DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id')
+export PG_HOST=$(ghost connect $DB_ID)
 echo "DB_ID: $DB_ID"
 ```
 
 ```bash
-ghost sql "$DB_ID" "
+psql "$PG_HOST" <<SQL
 CREATE TABLE IF NOT EXISTS github_stars (
   id BIGSERIAL PRIMARY KEY,
   github_id BIGINT,
@@ -309,32 +310,15 @@ ALTER TABLE github_stars ADD COLUMN IF NOT EXISTS db_added_at TIMESTAMPTZ DEFAUL
 ALTER TABLE github_repos ADD COLUMN IF NOT EXISTS db_added_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE github_top_repos ADD COLUMN IF NOT EXISTS db_added_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE github_trending_recent ADD COLUMN IF NOT EXISTS db_added_at TIMESTAMPTZ DEFAULT NOW();
-"
+SQL
 ```
 
 ```bash
-ghost psql "$DB_ID" -- <<PSQL
-\copy github_stars (
-  github_id, full_name, name, html_url, description, language,
-  private, fork, archived, visibility, stargazers_count, watchers_count,
-  forks_count, open_issues_count, created_at, updated_at, pushed_at,
-  homepage, default_branch, owner_login, owner_type
-) FROM '$STARS_CSV' WITH (FORMAT csv, HEADER true)
-
-\copy github_repos (
-  github_id, full_name, name, html_url, description, language,
-  private, fork, archived, visibility, stargazers_count, watchers_count,
-  forks_count, open_issues_count, created_at, updated_at, pushed_at,
-  homepage, default_branch, owner_login, owner_type
-) FROM '$REPOS_CSV' WITH (FORMAT csv, HEADER true)
-
-\copy github_top_repos (
-  name, url, description, language, stargazers_count, updated_at
-) FROM '$TOP_REPOS_CSV' WITH (FORMAT csv, HEADER true)
-
-\copy github_trending_recent (
-  name, url, description, language, stargazers_count, updated_at
-) FROM '$TRENDING_CSV' WITH (FORMAT csv, HEADER true)
+psql "$PG_HOST" <<PSQL
+\copy github_stars (github_id, full_name, name, html_url, description, language, private, fork, archived, visibility, stargazers_count, watchers_count, forks_count, open_issues_count, created_at, updated_at, pushed_at, homepage, default_branch, owner_login, owner_type) FROM '$STARS_CSV' WITH (FORMAT csv, HEADER true)
+\copy github_repos (github_id, full_name, name, html_url, description, language, private, fork, archived, visibility, stargazers_count, watchers_count, forks_count, open_issues_count, created_at, updated_at, pushed_at, homepage, default_branch, owner_login, owner_type) FROM '$REPOS_CSV' WITH (FORMAT csv, HEADER true)
+\copy github_top_repos (name, url, description, language, stargazers_count, updated_at) FROM '$TOP_REPOS_CSV' WITH (FORMAT csv, HEADER true)
+\copy github_trending_recent (name, url, description, language, stargazers_count, updated_at) FROM '$TRENDING_CSV' WITH (FORMAT csv, HEADER true)
 PSQL
 ```
 
@@ -342,7 +326,7 @@ PSQL
 ## Remove duplicates
 
 ```bash
-ghost sql "$DB_ID" "
+psql "$PG_HOST" <<SQL
 DELETE FROM github_stars a USING github_stars b
 WHERE a.id > b.id AND a.github_id = b.github_id;
 
@@ -354,14 +338,14 @@ WHERE a.id > b.id AND a.url = b.url;
 
 DELETE FROM github_trending_recent a USING github_trending_recent b
 WHERE a.id > b.id AND a.url = b.url;
-"
+SQL
 ```
 
 
 ## Verify rows
 
 ```bash
-ghost sql "$DB_ID" "
+psql "$PG_HOST" -c "
 SELECT 'github_stars' AS table_name, COUNT(*) FROM github_stars
 UNION ALL
 SELECT 'github_repos' AS table_name, COUNT(*) FROM github_repos

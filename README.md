@@ -4,25 +4,60 @@ This project collects personal data from various sources and loads it into a Gho
 
 ## Data Sources
 
-- Google Bookmarks
+
 - GitHub
+- Google Bookmarks
 
-## Setup
 
-1. Install dependencies:
-   ```bash
-   uv sync
-   ```
+## Quickstart
 
-2. Run the data collection and loading scripts:
-   ```bash
-   ./runbooks/1-google-bookmarks.md
-   ./runbooks/2-github.md
-   ```
+### Downloads (read below for more detail)
 
-## Files
+```bash
+# install gh cli
+brew install gh
 
-- `requirements.md`: Lists the required command-line tools
-- `runbooks/`: Contains the scripts for collecting and loading data
-- `raw/`: Stores the raw data exports
-- `gists/`: Contains helper scripts
+# ghost
+curl -fsSL https://install.ghost.build | sh
+
+# psql client
+# uncomment to install
+# brew install libpq
+
+# workbooks
+# so you can run markdown as code
+# https://docs.workbooks.dev/cli/installation
+curl -fsSL https://get.workbooks.dev | sh
+
+```
+
+
+### Create Ghost Database
+```bash
+ghost login
+ghost create --name remember-me
+```
+
+### Login to GitHub
+```bash
+gh auth login
+```
+
+### Clone the repo
+```bash
+mkdir -p ~/dev/remember-me
+cd ~/dev/remember-me
+git clone https://github.com/codingforentrepreneurs/remember-me .
+```
+
+### Run the github runbook
+```bash
+wb run runbooks/1-github.md
+```
+
+### Verify the data
+```bash 
+export DB_ID=$(ghost list --json | jq -r --arg name "remember-me" '.[] | select(.name == $name) | .id')
+export PG_HOST=$(ghost connect $DB_ID)
+psql $PG_HOST -c "SELECT name, stargazers_count FROM github_top_repos ORDER BY stargazers_count DESC LIMIT 10;"
+```

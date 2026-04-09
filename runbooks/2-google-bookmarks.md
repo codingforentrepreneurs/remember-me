@@ -21,7 +21,7 @@ cd $PARENT
 ```bash
 export TABLE_NAME="google_bookmarks"
 export CSV_PATH="raw/chrome/bookmarks.csv"
-export GHOST_NAME="delacruz"
+export GHOST_NAME="remember-me"
 ```
 
 ### Google Bookmarks Parser Download
