@@ -7,7 +7,7 @@ on:
 
 jobs:
   top-repos:
-    if: false  # <-- Remove this line to activate the workflow
+    if: true  # <-- Remove this line to activate the workflow
     runs-on: ubuntu-latest
     env:
       GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
