@@ -4,9 +4,6 @@ name: Weekly Top Repos
 # To activate, remove the 'if: false' line on the job below.
 on:
   workflow_dispatch:
-  schedule:
-    # Runs every Monday at 06:00 UTC
-    - cron: "0 6 * * 1"
 
 jobs:
   top-repos:
@@ -39,4 +36,4 @@ jobs:
 
       - name: Run top-repos runbook
         run: |
-          wb run runbooks/3-top-repos.md --bail
+          wb run runbooks/1-github.md --bail
