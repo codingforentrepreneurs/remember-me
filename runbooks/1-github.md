@@ -46,6 +46,13 @@ These commands do not need to run every time. They are here so the collection wo
 
 ### Authenticate GitHub CLI
 ```bash
+if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -z "${GH_TOKEN:-}" ]; then
+  echo "Missing GH_TOKEN in GitHub Actions"
+  echo "Set a user personal access token in the 'GH_TOKEN' repository secret"
+  echo "The default Actions GITHUB_TOKEN cannot access user-scoped endpoints like /user/starred"
+  exit 1
+fi
+
 GH_AUTH_STATUS=$(gh auth status 2>&1)
 if ! echo "$GH_AUTH_STATUS" | grep -q "✓ Logged in"; then
   echo "Not logged in to GitHub"
@@ -53,6 +60,8 @@ if ! echo "$GH_AUTH_STATUS" | grep -q "✓ Logged in"; then
   exit 1
 fi
 ```
+
+In GitHub Actions, use a user PAT stored as the `GH_TOKEN` secret. The default `GITHUB_TOKEN` is an installation token and cannot call user-scoped endpoints such as `user/starred` and `user/repos`.
 
 ### Export starred repos
 ```bash

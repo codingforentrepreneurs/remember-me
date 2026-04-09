@@ -5,13 +5,18 @@ name: My GitHub Sync
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   my-github-sync:
     if: true  # <-- Remove this line to activate the workflow
     runs-on: ubuntu-latest
     env:
       GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Use a user PAT here. The default Actions GITHUB_TOKEN is an integration
+      # token and cannot access user-scoped endpoints like /user/starred.
+      GH_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
       GHOST_NAME: "remember-me"
 
     steps:
