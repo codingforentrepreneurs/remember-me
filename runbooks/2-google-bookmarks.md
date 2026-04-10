@@ -13,29 +13,40 @@ Parse the Chrome/Google bookmarks export, load it into Ghost Postgres, and verif
 ### Location Config
 ```bash
 export CWD="$(pwd)"
-export PARENT="$(dirname "$CWD")"
-cd $PARENT
+if [ "$(basename "$CWD")" = "runbooks" ]; then
+    export REPO_ROOT="$(dirname "$CWD")"
+else
+    export REPO_ROOT="$CWD"
+fi
 ```
 
 ### Data Config
 ```bash
 export TABLE_NAME="google_bookmarks"
-export CSV_PATH="raw/chrome/bookmarks.csv"
+export CSV_PATH="$REPO_ROOT/raw/chrome/bookmarks.csv"
+export GIST_PATH="$REPO_ROOT/gists/google_bookmarks_to_csv.py"
 export GHOST_NAME="remember-me"
+```
+
+### Create Output Directories
+
+```bash
+mkdir -p "$(dirname "$CSV_PATH")"
+mkdir -p "$(dirname "$GIST_PATH")"
 ```
 
 ### Google Bookmarks Parser Download
 
 ```bash
-if [ ! -f gists/google_bookmarks_to_csv.py ]; then
-    curl -o gists/google_bookmarks_to_csv.py https://gist.githubusercontent.com/codingforentrepreneurs/916be33f515589df486c80ca9d07ca0d/raw/6e25751789a6b7f98a1b9b0a4195e1133f6e5c02/google_bookmarks_to_csv.py
+if [ ! -f "$GIST_PATH" ]; then
+    curl -o "$GIST_PATH" https://gist.githubusercontent.com/codingforentrepreneurs/916be33f515589df486c80ca9d07ca0d/raw/6e25751789a6b7f98a1b9b0a4195e1133f6e5c02/google_bookmarks_to_csv.py
 fi
 ```
 
 ## Find latest Bookmarks Export
 
 ```bash
-export BOOKMARK_PATH=$(ls -lt raw/chrome/bookmarks*.html | head -1 | awk '{print $9}')
+export BOOKMARK_PATH=$(ls -t "$REPO_ROOT"/raw/chrome/bookmarks*.html 2>/dev/null | head -1)
 echo "BOOKMARK_PATH: $BOOKMARK_PATH"
 ```
 
@@ -50,15 +61,15 @@ fi
 ## Parse the export
 
 ```bash
-uv run gists/google_bookmarks_to_csv.py \
-    $BOOKMARK_PATH \
-    $CSV_PATH
+uv run "$GIST_PATH" \
+    "$BOOKMARK_PATH" \
+    "$CSV_PATH"
 ```
 
 ## Verify CSV
 
 ```bash
-head $CSV_PATH
+head "$CSV_PATH"
 ```
 
 

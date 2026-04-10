@@ -1,4 +1,4 @@
-# Personal Data Pipeline
+# My Remember Me - Personal Data Pipeline
 
 This project collects personal data from various sources and loads it into a Ghost Postgres database.
 
@@ -61,3 +61,14 @@ export DB_ID=$(ghost list --json | jq -r --arg name "remember-me" '.[] | select(
 export PG_HOST=$(ghost connect $DB_ID)
 psql $PG_HOST -c "SELECT name, stargazers_count FROM github_top_repos ORDER BY stargazers_count DESC LIMIT 10;"
 ```
+
+## Ghost Fork Demo
+
+Use these runbooks to show how an agent can make a destructive Postgres mistake against a forked Ghost database while the source `remember-me` database stays intact.
+
+```bash
+wb demo/1-fork-db.md
+wb demo/2-ai-deletes-postgres.md
+```
+
+The first runbook forks `remember-me` and stores the source/fork database IDs in `demo/.ghost-fork.env`. The second runbook uses the fork's Postgres connection string, drops the fork's public tables, and then prints exact row counts from both the fork and the source database.
