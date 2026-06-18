@@ -2,9 +2,9 @@ name: Daily Hacker News
 
 on:
   workflow_dispatch:
-  schedule:
+  # schedule:
     # Runs every day at 06:00 UTC
-    - cron: "0 6 * * *"
+  # - cron: "0 6 * * *"
 
 permissions:
   contents: read
